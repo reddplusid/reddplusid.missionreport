@@ -1,0 +1,1 @@
+Drop static resources here

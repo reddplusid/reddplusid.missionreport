@@ -1,0 +1,1 @@
+Register browserviews here
