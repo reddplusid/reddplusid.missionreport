@@ -27,6 +27,23 @@ class IMissionReport(form.Schema, IImageScaleTraversable):
     """
     REDD+ Indonesia Mission Report
     """
-    pass
 
+    mission_achievements = RichText(
+            title=_(u'Summary of Main Achievements'),
+            description=_(u'Please fill this section in short telex '
+            'style.'),
+            )
+
+    mission_findings = RichText(
+            title=_(u'Mission Findings'),
+            description=_(u'Please keep to approx. 500 words.  '
+            'Other relevant documents can be attached below.'),
+            )
+
+    mission_followup = RichText(
+        title = _(u'Follow-up actions/next steps'),
+        description = _(u'In point form, include who should be doing'
+        'what.')
+    )
+    #FIXME distribution list
 
