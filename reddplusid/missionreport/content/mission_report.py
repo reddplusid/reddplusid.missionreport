@@ -42,7 +42,7 @@ class IMissionReport(form.Schema, IImageScaleTraversable):
 
     mission_followup = RichText(
         title = _(u'Follow-up actions/next steps'),
-        description = _(u'In point form, include who should be doing'
+        description = _(u'In point form, include who should be doing '
         'what.')
     )
     #FIXME distribution list
