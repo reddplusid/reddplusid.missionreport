@@ -20,8 +20,11 @@
   <property name="schema">reddplusid.missionreport.content.mission_report.IMissionReport</property> 
   <property name="klass">plone.dexterity.content.Container</property>
   <property name="behaviors">
-     <element value="plone.app.content.interfaces.INameFromTitle" />
-     <element value="plone.app.dexterity.behaviors.metadata.IDublinCore"/>
+     <element value="plone.app.content.interfaces.IReindexOnModify" />
+     <element value="plone.app.dexterity.behaviors.metadata.ICategorization"/>
+     <element value="plone.app.dexterity.behaviors.metadata.IPublication"/>
+     <element value="plone.app.dexterity.behaviors.metadata.IOwnership"/>
+     <element value="plone.app.dexterity.behaviors.metadata.IExcludeFromNavigation"/>
    </property>
 
   <!-- View information -->

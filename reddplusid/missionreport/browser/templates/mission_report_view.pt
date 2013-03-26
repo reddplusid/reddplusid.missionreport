@@ -7,34 +7,73 @@
       i18n:domain="reddplusid.missionreport">
 <body>
 
-<tal:comment tal:condition="nothing">
-    This is a sample view template. It will not be used for rendering the
-    content unless activated by creation of a view class with a matching name.
-    
-    Note that we're using Plone 4 macros. Replace them with Plone 3 macros
-    if needed.
-</tal:comment>
-
 <metal:main fill-slot="content-core">
   <metal:content-core define-macro="content-core">
 
-    <tal:block repeat="widget view/widgets/values">
-        <div class="field" tal:condition="python:widget.__name__ not in ('IDublinCore.title', 'IDublinCore.description', 'title', 'description',)">
-            <label tal:content="widget/label" />
-            <br />
-            <div tal:content="structure widget/render" />
-        </div>
-    </tal:block>
+ <style>
+     div.mission-report-title h1 { text-align: center;
+                                   font-size: 24px;}
+     div.mission-report-title h2 { text-align: center; 
+                                   text-decoration: none;}
+     div.mission-report-title h3 { text-align: center; }
 
-    <fieldset tal:repeat="group view/groups"
-              tal:attributes="id python:''.join((group.prefix, 'groups.', group.__name__)).replace('.', '-')">
-        <legend tal:content="group/label" />
-        <div class="field" tal:repeat="widget group/widgets/values">
-            <label tal:content="widget/label" />
-            <br />
-            <div tal:content="structure widget/render" />
+     div.mission-report-title { padding-bottom: 2em; }
+
+     h2 { font-size: 20px ; line-height: 1.5em;}
+     h3 { font-size: 18px; }
+ </style>
+
+
+     <div tal:define="state python:here.portal_workflow.getInfoFor(here,'review_state')">
+        <dl class="portalMessage info" tal:condition="python:state == 'private'">
+             <dt>Draft</dt>
+             <dd>This report is in currently saved as a private draft. If
+                you wish to submit and send this report to colleagues,
+                please click on <b>State: Private</b> and select <b>Submit
+                Report</b>.
+            </dd>
+        </dl>
+   </div>
+
+    <div tal:define="mission view/mission;
+      mission_view nocall: mission/view;
+      dummy mission_view/update;">
+
+      <div class="mission-report-title">
+            <h1>
+               REDD+ Indonesia
+            </h1>
+            <h2>
+                Mission Report
+            </h2>
+            <h3 tal:content="mission/title">
+                Title
+            </h3>
         </div>
-    </fieldset>
+
+    <hr />
+
+    <metal:mission use-macro=="mission/view/macros/mission">
+    </metal:mission>
+
+    <h3>Summary of Main Achievements</h3>
+    <p tal:content="structure view/w/mission_achievements/render"></p>  
+
+    <h3>Findings</h3>
+    <p tal:content="structure view/w/mission_findings/render"></p>  
+
+    <h3>Follow-up actions/next steps</h3>
+    <p tal:content="structure view/w/mission_followup/render"></p>  
+
+  </div>
+
+  <h2>Attachments</h2>
+  <p class="discreet">
+  Click Add New and select Files in the green toolbar to add file
+  attachments. Files are also emailed to authors, mission members,
+  support staff and additional distribution list. For very large
+  files, add it to a project or partner folder, and add a link in your
+  mission report, rather than as an attachment here.</p>
 
     <fieldset id="folder-listing">
         <legend>Contents</legend>
@@ -43,9 +82,11 @@
         </tal:block>
     </fieldset>
 
+
+
+
   </metal:content-core>
 </metal:main>
 
 </body>
 </html>
-
