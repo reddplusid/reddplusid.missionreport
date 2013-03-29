@@ -17,6 +17,10 @@ from plone.app.textfield import RichText
 
 from z3c.relationfield.schema import RelationList, RelationChoice
 from plone.formwidget.contenttree import ObjPathSourceBinder
+from plone.formwidget.autocomplete import AutocompleteFieldWidget
+from plone.formwidget.autocomplete import AutocompleteMultiFieldWidget
+
+
 
 from reddplusid.missionreport import MessageFactory as _
 
@@ -27,6 +31,18 @@ class IMissionReport(form.Schema, IImageScaleTraversable):
     """
     REDD+ Indonesia Mission Report
     """
+
+    form.widget(mission_author=AutocompleteMultiFieldWidget)
+    mission_author= schema.List(
+            title=_(u'Author'),
+            description=_(u'List of Authors. Enter '
+                'name to search, select and press Enter to add. Repeat to '
+                'to add additional members with principal author first.'),
+            value_type=schema.Choice(vocabulary=u"plone.principalsource.Users"),
+            default=[],
+            missing_value=(),
+            required=True,
+            )
 
     mission_achievements = RichText(
             title=_(u'Summary of Main Achievements'),

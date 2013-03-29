@@ -49,6 +49,11 @@
             <h3 tal:content="mission/title">
                 Title
             </h3>
+
+            <h3>
+            Authors: <span tal:content="structure
+                view/w/mission_author/render"></span>
+            </h3>
         </div>
 
     <hr />
