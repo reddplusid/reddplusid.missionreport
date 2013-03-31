@@ -70,6 +70,9 @@
     <h3>Follow-up actions/next steps</h3>
     <p tal:content="structure view/w/mission_followup/render"></p>  
 
+    <label>Email Distribution List</label><br />
+    <p tal:content="structure view/w/mission_distribution/render"></p>
+
   </div>
 
   <h2>Attachments</h2>
