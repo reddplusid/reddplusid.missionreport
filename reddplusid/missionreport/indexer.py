@@ -43,8 +43,7 @@ def mission_searchabletext(obj):
     results.append(getattr(obj, 'obj.mission_scope', ''))
     results.append(getattr (obj, 'obj.mission_funding_source', ''))
     if obj.id_province:
-        for province in obj.id_province:
-            results.append(id_provinces.getTerm(id_province).title)
+        results.append(id_provinces.getTerm(id_province).title)
     if obj.country:
         results.append(p01.vocabulary.country.ISO3166Alpha2CountryVocabulary(obj).getTerm(obj.country).title)
     results.append(obj.output_contribution.output)
