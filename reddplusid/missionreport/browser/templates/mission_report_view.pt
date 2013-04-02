@@ -5,6 +5,7 @@
       lang="en"
       metal:use-macro="context/main_template/macros/master"
       i18n:domain="reddplusid.missionreport">
+
 <body>
 
 <metal:main fill-slot="content-core">
@@ -58,7 +59,7 @@
 
     <hr />
 
-    <metal:mission use-macro=="mission/view/macros/mission">
+    <metal:mission use-macro="mission/view/macros/mission">
     </metal:mission>
 
     <h3>Summary of Main Achievements</h3>
