@@ -79,5 +79,3 @@ class IMissionReport(form.Schema, IImageScaleTraversable):
            ),
        required=False,
        )
-
-
