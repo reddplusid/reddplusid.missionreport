@@ -15,6 +15,8 @@
 
     <include package=".behavior"/>
     <include package=".portlet"/>
+    <include package=".contentrule"/>
+
 
     <!-- -*- extra stuff goes here -*- -->
 
