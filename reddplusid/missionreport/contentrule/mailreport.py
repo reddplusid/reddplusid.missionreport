@@ -19,6 +19,8 @@ from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone import PloneMessageFactory as _
 from Products.CMFPlone.utils import safe_unicode
 
+from reddplusid.mission.content.mission import id_provinces
+import p01.vocabulary.country 
 
 class IMailAction(Interface):
     """Definition of the configuration available for a mail action
@@ -111,33 +113,43 @@ action or enter an email in the portal properties'
 
         #FIXME these loops can re refactored as single function
 
+        distribution = []
+
         mission_authors = []
         for author_id in obj.mission_author:
             mission_author = membertool.getMemberInfo(author_id)
             mission_authors.append(safe_unicode(mission_author['fullname']))
+            distribution.append(membertool.getMemberById(author_id).getProperty('email'))
 
         mission_members = []
         for member_id in parent.mission_members:
             member = membertool.getMemberInfo(member_id)
             mission_members.append(safe_unicode(member['fullname']))
+            distribution.append(membertool.getMemberById(member_id).getProperty('email'))
 
         mission_support_staff = []
         for staff_id in parent.mission_support_staff:
             staff = membertool.getMemberInfo(staff_id)
             mission_support_staff.append(safe_unicode(staff['fullname']))
+            distribution.append(membertool.getMemberById(staff_id).getProperty('email'))
 
         objective   = safe_unicode(parent.Description())
 
         output_stream = safe_unicode(parent.output_stream)
-        output_contribution = safe_unicode(parent.output_contribution)
+        output_contribution = safe_unicode(parent.output_contribution.output)
+
+        id_province = id_provinces.getTerm(parent.id_province).title
+
+
+        country = p01.vocabulary.country.ISO3166Alpha2CountryVocabulary(parent).getTerm(parent.country).title
 
         funding_source = safe_unicode(parent.mission_funding_source)
         
-        mission_achievements = safe_unicode(obj.mission_achievements)
+        mission_achievements = safe_unicode(obj.mission_achievements.output)
 
-        mission_findings = safe_unicode(obj.mission_findings)
+        mission_findings = safe_unicode(obj.mission_findings.output)
 
-        followup = safe_unicode(obj.mission_followup)
+        followup = safe_unicode(obj.mission_followup.output)
 
         period_start = safe_unicode(parent.start)
         period_end   = safe_unicode(parent.end)
@@ -146,7 +158,13 @@ action or enter an email in the portal properties'
 
         mission_location = safe_unicode(parent.mission_location)
 
-        distribution = safe_unicode(obj.mission_distribution)
+        #made up of emails of author, members, supporting staff and free
+        #field
+
+        for distribution_email in obj.mission_distribution:
+            distribution.append(distribution_email)
+
+        distribution = list(set(distribution))
 
         delimiter = u','.encode('utf-8')
         br = u'<br />'.encode('utf-8')
@@ -167,18 +185,18 @@ action or enter an email in the portal properties'
         <h3>Mission Details</h3>
         <ul>
             <li>When: $period_start to $period_end </li>
-            <li>Scope: </li>
-            <li>Country: </li>
-            <li>Province: </li>
-            <li>City: </li>
-            <li>Fundint source: </li>
+            <li>Scope: $scope </li>
+            <li>Country: $country </li>
+            <li>Province: $id_province </li>
+            <li>City: $mission_location </li>
+            <li>Funding source: $funding_source </li>
         </ul>
 
         <h3>Output Stream</h3>
         $output_stream
 
         <h3>Contribution to Output</h3>
-        $contribution
+        $output_contribution
 
         <h3>Summary of Main Achievements</h3>
         $mission_achievements
@@ -187,9 +205,9 @@ action or enter an email in the portal properties'
         $mission_findings
 
         <h3>Follow-up actions/next steps</h3>
-        $mission_followup
+        $followup
 
-        <h3>Distribution List</h3>
+        <h3>Email Distribution List</h3>
         $distribution
         <p>
         -- <br />
@@ -202,12 +220,22 @@ action or enter an email in the portal properties'
         body = email_template.substitute({
             'authors' : br.join(mission_authors),
             'objective'     : parent.description, 
-            'members'       : br.join(mission_members),
+            'mission_members'       : br.join(mission_members),
+            'mission_support_staff' : br.join(mission_support_staff),
+            'scope' : scope,
+            'country' : country,
+            'funding_source' : funding_source,
+            'output_stream' : output_stream,
+            'output_contribution' : output_contribution,
+            'mission_achievements' : mission_achievements,
+            'mission_findings' : mission_findings,
+            'followup' : followup,
+            'id_province' : id_province,
             'period_start'  : safe_unicode(period_start),
             'period_end'     : safe_unicode(period_end),
             'mission_location' :
             safe_unicode(delimiter.join(mission_location)),
-            'distribution' : safe_unicode(delimiter.join(obj.mission_distribution)),
+            'distribution' : safe_unicode(delimiter.join(distribution)),
             'event_url' : event_url,
              })
 
