@@ -101,13 +101,13 @@ action or enter an email in the portal properties'
 
         creator = obj.Creator()
         member = membertool.getMemberById(creator)
-        author = member.getProperty('email')
+        author_email = member.getProperty('email')
         authorinfo = membertool.getMemberInfo(creator)
         fullname = authorinfo['fullname']
 
         msg  = MIMEMultipart()
         msg['Subject'] = subject
-        msg['From'] = author
+        msg['From'] =  authoremail
 
         #Variables for mission report
 
@@ -166,7 +166,7 @@ action or enter an email in the portal properties'
 
         distribution = list(set(distribution))
 
-        delimiter = u','.encode('utf-8')
+        delimiter = u', '.encode('utf-8')
         br = u'<br />'.encode('utf-8')
 
 
@@ -231,8 +231,8 @@ action or enter an email in the portal properties'
             'mission_findings' : mission_findings,
             'followup' : followup,
             'id_province' : id_province,
-            'period_start'  : safe_unicode(period_start),
-            'period_end'     : safe_unicode(period_end),
+            'period_start'  : safe_unicode(period_start.strftime('%e %B %Y')),
+            'period_end'     : safe_unicode(period_end.strftime('%e %B %Y')),
             'mission_location' :
             safe_unicode(delimiter.join(mission_location)),
             'distribution' : safe_unicode(delimiter.join(distribution)),
@@ -243,26 +243,25 @@ action or enter an email in the portal properties'
         htmlPart = MIMEText(body_safe, 'html', 'utf-8')
         msg.attach(htmlPart)
 
-        #File attachments here should be rewritten into function
+        #File attachments
 
-#        if str(obj.getAttachment1()):
-#
-#            file = str(obj.getAttachment1())
-#            ctype = obj.attachment1.getContentType()
-#            filename = obj.attachment1.filename
-#
-#            maintype, subtype = ctype.split(('/'), 1)
-#
-#            attachment = MIMEBase(maintype, subtype)
-#            attachment.set_payload(file)
-#            Encoders.encode_base64(attachment)
-#
-#            attachment.add_header('Content-Disposition', 'attachment',
-#                    filename = filename)
-#
-#            msg.attach(attachment)
+        file_brains = obj.getFolderContents()
+
+        for file_brain in file_brains:
+            file = file_brain.getObject().getFile()
+            ctype = file.getContentType()
+            filename = file.filename
+
+            maintype, subtype = ctype.split(('/'), 1)
+            attachment = MIMEBase(maintype, subtype)
+            attachment.set_payload(str(file))
+            Encoders.encode_base64(attachment)
+            attachment.add_header('Content-Disposition', 'attachment',
+                    filename = filename)
+            msg.attach(attachment)
 
         #FIXME distribution needs error checking
+
 
         for recipient in distribution:
             #Delete previous To headers in loop as default behaviour is
