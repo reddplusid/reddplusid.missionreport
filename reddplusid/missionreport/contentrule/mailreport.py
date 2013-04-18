@@ -107,7 +107,7 @@ action or enter an email in the portal properties'
 
         msg  = MIMEMultipart()
         msg['Subject'] = subject
-        msg['From'] =  authoremail
+        msg['From'] =  fullname + ' <' + author_email + '>'
 
         #Variables for mission report
 
@@ -183,14 +183,14 @@ action or enter an email in the portal properties'
         $mission_support_staff
 
         <h3>Mission Details</h3>
-        <ul>
-            <li>When: $period_start to $period_end </li>
-            <li>Scope: $scope </li>
-            <li>Country: $country </li>
-            <li>Province: $id_province </li>
-            <li>City: $mission_location </li>
-            <li>Funding source: $funding_source </li>
-        </ul>
+
+            <h5>When:</h5>
+            $period_start to $period_end 
+            <h5>Scope:</h5> $scope
+            <h5>Country:</h5> $country
+            <h5>Province:</h5> $id_province 
+            <h5>City:</h5> $mission_location 
+            <h5>Funding source:</h5> $funding_source 
 
         <h3>Output Stream</h3>
         $output_stream
