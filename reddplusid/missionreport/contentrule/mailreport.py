@@ -12,7 +12,7 @@ from email.MIMEBase import MIMEBase
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 
-from plone.app.contentrules.browser.formhelper import AddForm, EditForm 
+from plone.app.contentrules.browser.formhelper import AddForm, EditForm
 from plone.contentrules.rule.interfaces import IRuleElementData, IExecutable
 
 from Products.CMFCore.utils import getToolByName
@@ -20,22 +20,30 @@ from Products.CMFPlone import PloneMessageFactory as _
 from Products.CMFPlone.utils import safe_unicode
 
 from reddplusid.mission.content.mission import id_provinces
-import p01.vocabulary.country 
+import p01.vocabulary.country
+
 
 class IMailAction(Interface):
     """Definition of the configuration available for a mail action
     """
     source = schema.TextLine(title=_(u"Email source"),
                              description=_("The email address that sends the \
-email. If no email is provided here, it will use the address of the \
-report owner."),
+                                     email. If no email is provided \
+                                     here, ita will use the address of the \
+                                     report owner."),
                              required=False)
     recipients = schema.TextLine(title=_(u"Email recipients"),
-                                description=_("The email where you want to \
-send this message. To send it to different email addresses, just separate them\
- with , By default email will be sent to addresses in the distribution\
- list of the mission report"),
-                                required=False)
+                                 description=_(
+                                 "The email where you want to send this "
+                                 "message. To send it to "
+                                 "different email addresses, just "
+                                 "separate them  with , By default "
+                                 "email will be sent to addresses in "
+                                 "the distribution list of the mission "
+                                 "report."
+                                 ),
+                                 required=False)
+
 
 class MailAction(SimpleItem):
     """
@@ -67,18 +75,47 @@ class MailActionExecutor(object):
         self.element = element
         self.event = event
 
+    def user_names(self, userids):
+        '''Accepts iterable of userids and returns list of full names of
+        users.
+        '''
+
+        membertool = getToolByName(aq_inner(self.context), "portal_membership")
+
+        usernames = []
+        for userid in userids:
+            user = membertool.getMemberInfo(userid)
+
+            if user['fullname']:
+                usernames.append(safe_unicode(user['fullname']))
+            else:
+                usernames.append(userid)
+
+        return usernames
+
+    def user_emails(self, userids):
+        '''Accepts iterable of userids and retuerns list of emails
+        of users'''
+
+        membertool = getToolByName(aq_inner(self.context), "portal_membership")
+
+        emails = []
+        for userid in userids:
+            emails.append(membertool.getMemberById(userid).getProperty('email'))
+
+        return emails
+
     def __call__(self):
         recipients = [str(mail.strip()) for mail in \
                       self.element.recipients.split(',')]
         mailhost = getToolByName(aq_inner(self.context), "MailHost")
         if not mailhost:
             raise ComponentLookupError, 'You must have a Mailhost utility to \
-execute this action'
+                                         execute this action'
 
         source = self.element.source
         urltool = getToolByName(aq_inner(self.context), "portal_url")
-        membertool = getToolByName(aq_inner(self.context),"portal_membership")
-        #authortool = getToolByName(aq_inner(self.context),"getMemberInfo")
+        membertool = getToolByName(aq_inner(self.context), "portal_membership")
         portal = urltool.getPortalObject()
         if not source:
             # no source provided, looking for the site wide from email
@@ -86,7 +123,7 @@ execute this action'
             from_address = portal.getProperty('email_from_address')
             if not from_address:
                 raise ValueError, 'You must provide a source address for this \
-action or enter an email in the portal properties'
+                                    action or enter an email in the portal properties'
             from_name = portal.getProperty('email_from_name')
             source = "%s <%s>" % (from_name, from_address)
 
@@ -104,34 +141,20 @@ action or enter an email in the portal properties'
         author_email = member.getProperty('email')
         authorinfo = membertool.getMemberInfo(creator)
         fullname = authorinfo['fullname']
-
-        msg  = MIMEMultipart()
+        msg = MIMEMultipart()
         msg['Subject'] = subject
-        msg['From'] =  fullname + ' <' + author_email + '>'
+        msg['From'] = fullname + ' <' + author_email + '>'
 
         #Variables for mission report
 
-        #FIXME these loops can re refactored as single function
 
-        distribution = []
+        distribution = (self.user_emails(obj.mission_author) +  
+                       self.user_emails(parent.mission_members) +  
+                       self.user_emails(parent.mission_support_staff))
 
-        mission_authors = []
-        for author_id in obj.mission_author:
-            mission_author = membertool.getMemberInfo(author_id)
-            mission_authors.append(safe_unicode(mission_author['fullname']))
-            distribution.append(membertool.getMemberById(author_id).getProperty('email'))
-
-        mission_members = []
-        for member_id in parent.mission_members:
-            member = membertool.getMemberInfo(member_id)
-            mission_members.append(safe_unicode(member['fullname']))
-            distribution.append(membertool.getMemberById(member_id).getProperty('email'))
-
-        mission_support_staff = []
-        for staff_id in parent.mission_support_staff:
-            staff = membertool.getMemberInfo(staff_id)
-            mission_support_staff.append(safe_unicode(staff['fullname']))
-            distribution.append(membertool.getMemberById(staff_id).getProperty('email'))
+        mission_authors = self.user_names(obj.mission_author)
+        mission_members = self.user_names(parent.mission_members)
+        mission_support_staff = self.user_names(parent.mission_support_staff)
 
         objective   = safe_unicode(parent.Description())
 
@@ -182,6 +205,9 @@ action or enter an email in the portal properties'
         <h3>Supporting Staff</h3>
         $mission_support_staff
 
+        <h3>Mission Objective</h3>
+        $objective
+
         <h3>Mission Details</h3>
 
             <h5>When:</h5>
@@ -217,27 +243,28 @@ action or enter an email in the portal properties'
 
         email_template = string.Template(email_form)
 
-        body = email_template.substitute({
-            'authors' : br.join(mission_authors),
-            'objective'     : parent.description, 
-            'mission_members'       : br.join(mission_members),
-            'mission_support_staff' : br.join(mission_support_staff),
-            'scope' : scope,
-            'country' : country,
-            'funding_source' : funding_source,
-            'output_stream' : output_stream,
-            'output_contribution' : output_contribution,
-            'mission_achievements' : mission_achievements,
-            'mission_findings' : mission_findings,
-            'followup' : followup,
-            'id_province' : id_province,
-            'period_start'  : safe_unicode(period_start.strftime('%e %B %Y')),
-            'period_end'     : safe_unicode(period_end.strftime('%e %B %Y')),
-            'mission_location' :
-            safe_unicode(delimiter.join(mission_location)),
-            'distribution' : safe_unicode(delimiter.join(distribution)),
-            'event_url' : event_url,
-             })
+        body = email_template.substitute(
+            {
+                'authors' : br.join(mission_authors),
+                'objective'     : parent.description, 
+                'mission_members'       : br.join(mission_members),
+                'mission_support_staff' : br.join(mission_support_staff),
+                'scope' : scope,
+                'country' : country,
+                'funding_source' : funding_source,
+                'output_stream' : output_stream,
+                'output_contribution' : output_contribution,
+                'mission_achievements' : mission_achievements,
+                'mission_findings' : mission_findings,
+                'followup' : followup,
+                'id_province' : id_province,
+                'period_start'  : safe_unicode(period_start.strftime('%e %B %Y')),
+                'period_end'     : safe_unicode(period_end.strftime('%e %B %Y')),
+                'mission_location' :
+                safe_unicode(delimiter.join(mission_location)),
+                'distribution' : safe_unicode(delimiter.join(distribution)),
+                'event_url' : event_url,
+            })
 
         body_safe = body.encode('utf-8')
         htmlPart = MIMEText(body_safe, 'html', 'utf-8')
@@ -257,7 +284,7 @@ action or enter an email in the portal properties'
             attachment.set_payload(str(file))
             Encoders.encode_base64(attachment)
             attachment.add_header('Content-Disposition', 'attachment',
-                    filename = filename)
+                                   filename = filename)
             msg.attach(attachment)
 
         #FIXME distribution needs error checking
@@ -273,6 +300,8 @@ action or enter an email in the portal properties'
             mailhost.send(msg.as_string())
 
         return True
+
+
 
 
 
